@@ -1,0 +1,1 @@
+// Feature: Listings | Layer: Domain Entity
