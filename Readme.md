@@ -1,5 +1,34 @@
 # 📌 Cross-Platform Airbnb Architecture Clone (High-Fidelity Learning Vehicle)
 
+## Supabase email authentication setup
+
+1. Copy `.env.example` to `.env` in the project root.
+2. Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` from the Supabase
+   project's API settings. Alternatively, the legacy anon key can be set as
+   `SUPABASE_ANON_KEY`.
+3. Run `flutter pub get`, then launch the app.
+
+Riverpod's keep-alive auth controller restores the Supabase session before
+resolving the startup route and subscribes to Supabase auth events so sign-in,
+sign-out, and token refreshes update the app shell. It supports email/password
+sign-in, sign-up, and sign-out. When email confirmation is enabled in Supabase,
+sign-up displays a confirmation prompt and keeps the user outside the protected
+home route until they sign in.
+
+Apply the SQL migration in `supabase/migrations/` to the Supabase project.
+It assigns the trusted `app_metadata.role` to new accounts (`user` by default)
+and preserves a trusted `admin` role. The app reads this value into the user
+profile. Signup also sends `user_metadata.role=user`, but that value is
+client-editable and is informational only; use `app_metadata` and Row Level
+Security policies for authorization.
+
+`.env` is excluded by `.gitignore`; do not commit it. Values shipped in a
+Flutter app are extractable, so a Supabase anon/publishable key is public
+configuration, not a secret. Never put a Supabase `service_role` key, database
+password, or other privileged secret in this file or in the client app. Enforce
+data access with Supabase Row Level Security policies and keep privileged
+operations on a trusted server.
+
 ## ⚠️ ABSOLUTE AGENT CONSTRAINT: SYSTEM BOUNDARY MANDATE
 
 - **Zero Vibe Coding:** This project is strictly an educational vehicle designed to master deterministic architectures, edge cases, and structural data mutations.
@@ -11,11 +40,12 @@
 
 ## 🏗️ 1. Technical Guardrails & Stack Blueprint
 
-The target is **Android and iOS** from one Flutter codebase. The current
-repository is still the Flutter starter scaffold; planned packages and
-integrations below are not yet installed.
+The target is **Android and iOS** from one Flutter codebase. The repository
+already uses Riverpod and Supabase email authentication; the marketplace
+backend and remaining integrations are still evolving.
 
-- **Current stack:** Flutter, Dart, and `cupertino_icons` (see `pubspec.yaml`).
+- **Current stack:** Flutter, Dart, Riverpod, GoRouter, and Supabase Flutter
+  (see `pubspec.yaml`).
 - **Planned UI and state:** Flutter and Dart with Riverpod Generator
   (`@riverpod`) for dependency injection, app state, and reactive data
   coordination. Do not add Redux, Zustand, or TanStack Query without an
@@ -32,10 +62,11 @@ integrations below are not yet installed.
 | Area              | Current                | Target                                                             |
 | ----------------- | ---------------------- | ------------------------------------------------------------------ |
 | Client            | Flutter + Dart         | Flutter for Android and iOS                                        |
-| State             | Starter-app state only | Riverpod Generator (`@riverpod`)                                   |
+| State             | Riverpod Generator     | Riverpod Generator (`@riverpod`)                                   |
 | Persistence       | Not configured         | Offline-first local database (decision pending)                    |
 | Data access       | Not configured         | Repository Pattern; UI observes local data                         |
-| Backend, push, AI | Not configured         | Secure server APIs; FCM and server-side AI are future integrations |
+| Authentication    | Supabase email/password| Supabase Auth; RLS-backed authorization                            |
+| Backend, push, AI | Partial                | Secure server APIs; FCM and server-side AI are future integrations |
 
 ## Visual Direction
 

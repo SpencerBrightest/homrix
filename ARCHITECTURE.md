@@ -3,9 +3,10 @@
 ## Status
 
 This is the intended architecture, not a description of every current runtime
-integration. Riverpod now composes the app shell and auth gate. Authentication
-is a clearly labeled demo-only in-memory session; it is not production identity
-verification or durable session persistence.
+integration. Riverpod now composes the app shell and auth gate. Email/password
+authentication uses Supabase Flutter with SDK-managed session persistence.
+The client configuration uses a public anon/publishable key; authorization and
+data isolation must be enforced through backend policies such as Supabase RLS.
 
 ## Product Boundary
 
