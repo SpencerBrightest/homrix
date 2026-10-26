@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homrix/app/router/app_router.dart';
+import 'package:homrix/features/auth/domain/repositories/abstract_auth_repository.dart';
+import 'package:homrix/features/auth/presentation/providers/auth_state_provider.dart';
 
 /// Provides Riverpod's application scope and composes the root widget.
 class HomrixApp extends StatelessWidget {
-  const HomrixApp({super.key});
+  const HomrixApp({super.key, this.authRepository});
+
+  /// Optional injection point for tests and alternate authentication adapters.
+  final AbstractAuthRepository? authRepository;
 
   @override
   Widget build(BuildContext context) {
-    return const ProviderScope(child: _HomrixRouterApp());
+    return ProviderScope(
+      overrides: [
+        if (authRepository != null)
+          authRepositoryProvider.overrideWithValue(authRepository!),
+      ],
+      child: const _HomrixRouterApp(),
+    );
   }
 }
 
