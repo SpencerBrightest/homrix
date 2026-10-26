@@ -9,53 +9,52 @@ part of 'auth_state_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(demoAuthSessionStore)
-final demoAuthSessionStoreProvider = DemoAuthSessionStoreProvider._();
+@ProviderFor(authRepository)
+final authRepositoryProvider = AuthRepositoryProvider._();
 
-final class DemoAuthSessionStoreProvider
+final class AuthRepositoryProvider
     extends
         $FunctionalProvider<
-          DemoAuthSessionStore,
-          DemoAuthSessionStore,
-          DemoAuthSessionStore
+          AbstractAuthRepository,
+          AbstractAuthRepository,
+          AbstractAuthRepository
         >
-    with $Provider<DemoAuthSessionStore> {
-  DemoAuthSessionStoreProvider._()
+    with $Provider<AbstractAuthRepository> {
+  AuthRepositoryProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'demoAuthSessionStoreProvider',
+        name: r'authRepositoryProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$demoAuthSessionStoreHash();
+  String debugGetCreateSourceHash() => _$authRepositoryHash();
 
   @$internal
   @override
-  $ProviderElement<DemoAuthSessionStore> $createElement(
+  $ProviderElement<AbstractAuthRepository> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  DemoAuthSessionStore create(Ref ref) {
-    return demoAuthSessionStore(ref);
+  AbstractAuthRepository create(Ref ref) {
+    return authRepository(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(DemoAuthSessionStore value) {
+  Override overrideWithValue(AbstractAuthRepository value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<DemoAuthSessionStore>(value),
+      providerOverride: $SyncValueProvider<AbstractAuthRepository>(value),
     );
   }
 }
 
-String _$demoAuthSessionStoreHash() =>
-    r'ad17fa16934fecb6e0af9b220fe459383de9f9f9';
+String _$authRepositoryHash() => r'857215da09a23907c2a147bc0fc7e450e5d551ad';
 
 /// Coordinates session restoration, demo login, and logout state transitions.
 
@@ -86,7 +85,7 @@ final class AuthStateControllerProvider
 }
 
 String _$authStateControllerHash() =>
-    r'48c97c287f28fa56f0f5e260ccb7f138fff0afc2';
+    r'7b7c4b036a40fc2b016d3a40d611758807551b78';
 
 /// Coordinates session restoration, demo login, and logout state transitions.
 

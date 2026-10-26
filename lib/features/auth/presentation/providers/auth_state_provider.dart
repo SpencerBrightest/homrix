@@ -1,5 +1,10 @@
+import 'dart:async';
+
+import 'package:homrix/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:homrix/features/auth/domain/entities/user_profile.dart';
+import 'package:homrix/features/auth/domain/repositories/abstract_auth_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'auth_state_provider.g.dart';
 
@@ -26,48 +31,38 @@ final class Unauthenticated extends AuthState {
   const Unauthenticated();
 }
 
-/// Minimal in-memory session store for the unaffiliated demo authentication.
-///
-/// Replace this store with the selected identity provider and secure session
-/// persistence before using authentication as a production security boundary.
-class DemoAuthSessionStore {
-  UserProfile? _currentUser;
-
-  Future<UserProfile?> readCurrentUser() async => _currentUser;
-
-  Future<UserProfile> createDemoSession() async {
-    const user = UserProfile(
-      id: 'demo-user',
-      displayName: 'Homrix Guest',
-      email: 'guest@example.com',
-    );
-    _currentUser = user;
-    return user;
-  }
-
-  Future<void> clearSession() async {
-    _currentUser = null;
-  }
-}
-
 @Riverpod(keepAlive: true)
-DemoAuthSessionStore demoAuthSessionStore(Ref ref) {
-  return DemoAuthSessionStore();
+AbstractAuthRepository authRepository(Ref ref) {
+  return AuthRepositoryImpl(Supabase.instance.client);
 }
 
-/// Coordinates session restoration, demo login, and logout state transitions.
+/// Restores and observes the Supabase session for the lifetime of the app.
 @Riverpod(keepAlive: true)
 class AuthStateController extends _$AuthStateController {
   @override
-  Future<AuthState> build() async => const AuthInitial();
+  Future<AuthState> build() async {
+    final repository = ref.watch(authRepositoryProvider);
+    final subscription = repository.authStateChanges.listen(
+      (user) {
+        state = AsyncData(
+          user == null ? const Unauthenticated() : Authenticated(user),
+        );
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        state = AsyncError(error, stackTrace);
+      },
+    );
+    ref.onDispose(() => unawaited(subscription.cancel()));
 
-  /// Restores the current session from the local session store.
+    final user = await repository.getCurrentUser();
+    return user == null ? const Unauthenticated() : Authenticated(user);
+  }
+
+  /// Rechecks the session after an explicit refresh request.
   Future<void> checkAuthenticationStatus() async {
     state = const AsyncData(AuthLoading());
     try {
-      final user = await ref
-          .read(demoAuthSessionStoreProvider)
-          .readCurrentUser();
+      final user = await ref.read(authRepositoryProvider).getCurrentUser();
       state = AsyncData(
         user == null ? const Unauthenticated() : Authenticated(user),
       );
@@ -77,13 +72,13 @@ class AuthStateController extends _$AuthStateController {
     }
   }
 
-  /// Creates a demo-only session; this does not authenticate real credentials.
-  Future<void> login() async {
+  /// Authenticates with the configured Supabase project.
+  Future<void> login({required String email, required String password}) async {
     state = const AsyncData(AuthLoading());
     try {
       final user = await ref
-          .read(demoAuthSessionStoreProvider)
-          .createDemoSession();
+          .read(authRepositoryProvider)
+          .signIn(email: email, password: password);
       state = AsyncData(Authenticated(user));
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
@@ -91,11 +86,37 @@ class AuthStateController extends _$AuthStateController {
     }
   }
 
-  /// Clears the demo session and returns the application to the login route.
+  /// Creates a Supabase account. Returns whether email verification is pending.
+  Future<bool> signUp({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
+    state = const AsyncData(AuthLoading());
+    try {
+      final requiresEmailConfirmation = await ref
+          .read(authRepositoryProvider)
+          .signUp(email: email, password: password, displayName: displayName);
+      if (requiresEmailConfirmation) {
+        state = const AsyncData(Unauthenticated());
+      } else {
+        final user = await ref.read(authRepositoryProvider).getCurrentUser();
+        state = user == null
+            ? const AsyncData(Unauthenticated())
+            : AsyncData(Authenticated(user));
+      }
+      return requiresEmailConfirmation;
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  /// Revokes the Supabase session and returns to the login route.
   Future<void> logout() async {
     state = const AsyncData(AuthLoading());
     try {
-      await ref.read(demoAuthSessionStoreProvider).clearSession();
+      await ref.read(authRepositoryProvider).signOut();
       state = const AsyncData(Unauthenticated());
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);

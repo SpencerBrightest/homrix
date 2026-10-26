@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homrix/features/auth/presentation/providers/auth_state_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum _LoginMode { login, signUp }
 
-/// Login boundary for the demo shell; form validation remains local to the UI.
+/// Email/password sign-in and account registration boundary.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -56,11 +57,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     try {
-      await ref.read(authStateControllerProvider.notifier).login();
-    } on Object {
+      final controller = ref.read(authStateControllerProvider.notifier);
+      if (_isSignUp) {
+        final requiresEmailConfirmation = await controller.signUp(
+          email: _emailController.text,
+          password: _passwordController.text,
+          displayName:
+              '${_firstNameController.text.trim()} '
+              '${_lastNameController.text.trim()}',
+        );
+        if (requiresEmailConfirmation && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Check your email to confirm your account.'),
+            ),
+          );
+          _setMode(_LoginMode.login);
+        }
+      } else {
+        await controller.login(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+      }
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to sign in. Please try again.')),
+        const SnackBar(
+          content: Text(
+            'Unable to complete authentication. Check your connection and '
+            'Supabase configuration.',
+          ),
+        ),
       );
     }
   }
@@ -195,7 +227,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
           const SizedBox(height: 18),
           Text(
-            'Demo only: this form does not verify an account or credentials.',
+            _isSignUp
+                ? 'A confirmation email may be required before you can sign in.'
+                : 'Your account is authenticated securely with Supabase.',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Color(0xFF717171),

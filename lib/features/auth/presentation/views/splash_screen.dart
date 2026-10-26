@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homrix/features/auth/presentation/providers/auth_state_provider.dart';
 
 /// Branded startup screen shown while the local authentication state resolves.
 class SplashScreen extends ConsumerStatefulWidget {
@@ -11,27 +10,6 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      try {
-        await ref
-            .read(authStateControllerProvider.notifier)
-            .checkAuthenticationStatus();
-      } catch (error, stackTrace) {
-        FlutterError.reportError(
-          FlutterErrorDetails(
-            exception: error,
-            stack: stackTrace,
-            library: 'Homrix authentication startup',
-          ),
-        );
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
