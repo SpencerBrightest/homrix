@@ -56,15 +56,15 @@ final class AuthRepositoryProvider
 
 String _$authRepositoryHash() => r'857215da09a23907c2a147bc0fc7e450e5d551ad';
 
-/// Coordinates session restoration, demo login, and logout state transitions.
+/// Restores and observes the Supabase session for the lifetime of the app.
 
 @ProviderFor(AuthStateController)
 final authStateControllerProvider = AuthStateControllerProvider._();
 
-/// Coordinates session restoration, demo login, and logout state transitions.
+/// Restores and observes the Supabase session for the lifetime of the app.
 final class AuthStateControllerProvider
     extends $AsyncNotifierProvider<AuthStateController, AuthState> {
-  /// Coordinates session restoration, demo login, and logout state transitions.
+  /// Restores and observes the Supabase session for the lifetime of the app.
   AuthStateControllerProvider._()
     : super(
         from: null,
@@ -85,9 +85,9 @@ final class AuthStateControllerProvider
 }
 
 String _$authStateControllerHash() =>
-    r'7b7c4b036a40fc2b016d3a40d611758807551b78';
+    r'34a932a9617cb8e9eded327b10229d96a1710900';
 
-/// Coordinates session restoration, demo login, and logout state transitions.
+/// Restores and observes the Supabase session for the lifetime of the app.
 
 abstract class _$AuthStateController extends $AsyncNotifier<AuthState> {
   FutureOr<AuthState> build();
