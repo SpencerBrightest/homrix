@@ -93,7 +93,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(BlankHomeScreen), findsOneWidget);
-    expect(find.text('Welcome, Test Guest'), findsOneWidget);
+    expect(find.text('Where to?'), findsOneWidget);
   });
 
   testWidgets('Supabase auth events update the Riverpod route state', (
@@ -111,6 +111,27 @@ void main() {
     repository.emitSession(null);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('login_submit')), findsOneWidget);
+  });
+
+  testWidgets('explore tabs and listing favorites update Riverpod UI state', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      HomrixApp(authRepository: _TestAuthRepository()..signedIn = true),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Where to?'), findsOneWidget);
+    expect(find.byTooltip('Add to wishlist'), findsWidgets);
+
+    await tester.tap(find.text('Wishlists'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your wishlists'), findsOneWidget);
+
+    await tester.tap(find.text('Explore'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your wishlists'), findsNothing);
+    expect(find.text('Mexico City, Mexico'), findsOneWidget);
   });
 
   testWidgets('sign-up submits validated account data', (tester) async {
