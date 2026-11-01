@@ -157,33 +157,41 @@ class HomeExploreScreen extends ConsumerWidget {
       backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            _SearchHeader(
-              displayName: user?.displayName,
-              onFilterTap: () => _showFilterMessage(context),
-            ),
-            _CategorySelector(
-              selectedCategory: exploreState.selectedCategory,
-              onSelected: (category) => ref
-                  .read(exploreShellControllerProvider.notifier)
-                  .selectCategory(category),
-            ),
-            Expanded(
-              child: exploreState.selectedTab == ExploreTab.explore
-                  ? _ExploreFeed(
-                      favoriteIds: exploreState.favoriteIds,
-                      onFavorite: (id) => ref
-                          .read(exploreShellControllerProvider.notifier)
-                          .toggleFavorite(id),
-                    )
-                  : _TabPlaceholder(tab: exploreState.selectedTab),
-            ),
-          ],
-        ),
+        child: exploreState.selectedTab == ExploreTab.profile
+            ? _ProfilePage(
+                displayName: user?.displayName ?? 'Your profile',
+                email: user?.email,
+              )
+            : Column(
+                children: [
+                  _SearchHeader(
+                    displayName: user?.displayName,
+                    onFilterTap: () => _showFilterMessage(context),
+                  ),
+                  _CategorySelector(
+                    selectedCategory: exploreState.selectedCategory,
+                    onSelected: (category) => ref
+                        .read(exploreShellControllerProvider.notifier)
+                        .selectCategory(category),
+                  ),
+                  Expanded(
+                    child: exploreState.selectedTab == ExploreTab.explore
+                        ? _ExploreFeed(
+                            favoriteIds: exploreState.favoriteIds,
+                            onFavorite: (id) => ref
+                                .read(exploreShellControllerProvider.notifier)
+                                .toggleFavorite(id),
+                          )
+                        : _TabPlaceholder(tab: exploreState.selectedTab),
+                  ),
+                ],
+              ),
       ),
       bottomNavigationBar: _BottomNavigation(
         selectedTab: exploreState.selectedTab,
+        selectedColor: exploreState.selectedTab == ExploreTab.profile
+            ? _profileGreen
+            : _rausch,
         onSelected: (tab) =>
             ref.read(exploreShellControllerProvider.notifier).selectTab(tab),
       ),
@@ -194,6 +202,218 @@ class HomeExploreScreen extends ConsumerWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Filters are coming soon.')));
+  }
+}
+
+const _profileGreen = Color(0xFF087A50);
+const _profileCard = Color(0xFFF5F5F5);
+
+class _ProfilePage extends StatelessWidget {
+  const _ProfilePage({required this.displayName, this.email});
+
+  final String displayName;
+  final String? email;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
+      children: [
+        Column(
+          children: [
+            CircleAvatar(
+              radius: 52,
+              backgroundColor: const Color(0xFFE5E5E5),
+              child: Text(
+                _initialsFor(displayName),
+                style: const TextStyle(
+                  color: _charcoal,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              displayName,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 25,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (email != null && email!.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Text(
+                email!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: _muted, fontSize: 16),
+              ),
+            ],
+            const SizedBox(height: 22),
+            OutlinedButton(
+              onPressed: () => _showComingSoon(context, 'Profile editing'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _profileGreen,
+                side: const BorderSide(color: _profileGreen, width: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 12,
+                ),
+                shape: const StadiumBorder(),
+              ),
+              child: const Text(
+                'Edit profile',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 26),
+        _ProfileSection(
+          title: 'Payment info',
+          rows: [
+            _ProfileRow(
+              icon: Icons.card_giftcard_outlined,
+              label: 'Loyalty points',
+              onTap: () => _showComingSoon(context, 'Loyalty points'),
+            ),
+            _ProfileRow(
+              icon: Icons.credit_card_outlined,
+              label: 'Payment methods',
+              onTap: () => _showComingSoon(context, 'Payment methods'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        _ProfileSection(
+          title: 'Settings',
+          rows: [
+            _ProfileRow(
+              icon: Icons.translate,
+              label: 'Language',
+              value: 'English',
+              onTap: () => _showComingSoon(context, 'Language settings'),
+            ),
+            _ProfileRow(
+              icon: Icons.palette_outlined,
+              label: 'Theme',
+              value: 'Light',
+              onTap: () => _showComingSoon(context, 'Theme settings'),
+            ),
+            _ProfileRow(
+              icon: Icons.notifications_none_outlined,
+              label: 'Notifications',
+              value: 'Enabled',
+              onTap: () => _showComingSoon(context, 'Notification settings'),
+            ),
+            _ProfileRow(
+              icon: Icons.headset_mic_outlined,
+              label: 'Contact support',
+              onTap: () => _showComingSoon(context, 'Contact support'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        _ProfileSection(
+          title: 'Manage your Property',
+          rows: [
+            _ProfileRow(
+              icon: Icons.handshake_outlined,
+              label: 'List your property',
+              onTap: () => _showComingSoon(context, 'Property listings'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  static String _initialsFor(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty);
+    final initials = parts.take(2).map((part) => part[0].toUpperCase()).join();
+    return initials.isEmpty ? '?' : initials;
+  }
+
+  static void _showComingSoon(BuildContext context, String feature) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('$feature is coming soon.')));
+  }
+}
+
+class _ProfileSection extends StatelessWidget {
+  const _ProfileSection({required this.title, required this.rows});
+
+  final String title;
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _profileCard,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 18, 18, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 7),
+          ...rows,
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileRow extends StatelessWidget {
+  const _ProfileRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String? value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        height: 49,
+        child: Row(
+          children: [
+            Icon(icon, size: 23, color: Colors.black87),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(color: Colors.black, fontSize: 17),
+              ),
+            ),
+            if (value != null)
+              Text(value!, style: const TextStyle(color: _muted, fontSize: 16)),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -526,10 +746,12 @@ class _ListingCard extends StatelessWidget {
 class _BottomNavigation extends StatelessWidget {
   const _BottomNavigation({
     required this.selectedTab,
+    required this.selectedColor,
     required this.onSelected,
   });
 
   final ExploreTab selectedTab;
+  final Color selectedColor;
   final ValueChanged<ExploreTab> onSelected;
 
   static const _items = [
@@ -537,12 +759,7 @@ class _BottomNavigation extends StatelessWidget {
     (ExploreTab.wishlists, 'Wishlists', Icons.favorite_border, Icons.favorite),
     (ExploreTab.trips, 'Trips', Icons.airline_stops, Icons.airline_stops),
     (ExploreTab.inbox, 'Inbox', Icons.chat_bubble_outline, Icons.chat_bubble),
-    (
-      ExploreTab.profile,
-      'Profile',
-      Icons.account_circle_outlined,
-      Icons.account_circle,
-    ),
+    (ExploreTab.profile, 'Profile', Icons.person_outline, Icons.person),
   ];
 
   @override
@@ -564,6 +781,7 @@ class _BottomNavigation extends StatelessWidget {
                     label: item.$2,
                     icon: selectedTab == item.$1 ? item.$4 : item.$3,
                     selected: selectedTab == item.$1,
+                    selectedColor: selectedColor,
                     onTap: () => onSelected(item.$1),
                   ),
                 ),
@@ -580,17 +798,19 @@ class _BottomNavItem extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.selected,
+    required this.selectedColor,
     required this.onTap,
   });
 
   final String label;
   final IconData icon;
   final bool selected;
+  final Color selectedColor;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? _rausch : _muted;
+    final color = selected ? selectedColor : _muted;
     return Semantics(
       button: true,
       selected: selected,

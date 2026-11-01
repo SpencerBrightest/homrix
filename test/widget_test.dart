@@ -132,6 +132,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Your wishlists'), findsNothing);
     expect(find.text('Mexico City, Mexico'), findsOneWidget);
+
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    expect(find.text('Test Guest'), findsOneWidget);
+    expect(find.text('test@example.com'), findsOneWidget);
+    expect(find.text('Payment info'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+    await tester.drag(find.byType(ListView), const Offset(0, -800));
+    await tester.pumpAndSettle();
+    expect(find.text('Manage your Property'), findsOneWidget);
   });
 
   testWidgets('sign-up submits validated account data', (tester) async {
